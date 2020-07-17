@@ -16,10 +16,16 @@
 
 	<dependencies>
 		<!-- Neo4J Driver Dependency -->
+		<!--<dependency>-->
+			<!--<groupId>org.neo4j.driver</groupId>-->
+			<!--<artifactId>neo4j-java-driver</artifactId>-->
+			<!--<version>1.0.3</version>-->
+		<!--</dependency>-->
+
 		<dependency>
 			<groupId>org.neo4j.driver</groupId>
 			<artifactId>neo4j-java-driver</artifactId>
-			<version>1.0.3</version>
+			<version>4.0.0</version>
 		</dependency>
 
 		<!-- JavaParser Dependency -->
@@ -31,10 +37,16 @@
 		</dependency>
 
 		<!-- JavaParser Dependency -->
+		<!--<dependency>-->
+			<!--<groupId>com.github.javaparser</groupId>-->
+			<!--<artifactId>javaparser-core</artifactId>-->
+			<!--<version>2.5.1</version>-->
+		<!--</dependency>-->
+
 		<dependency>
 			<groupId>com.github.javaparser</groupId>
 			<artifactId>javaparser-core</artifactId>
-			<version>2.5.1</version>
+			<version>3.15.10</version>
 		</dependency>
 
 		<!-- Log4j Dependency -->

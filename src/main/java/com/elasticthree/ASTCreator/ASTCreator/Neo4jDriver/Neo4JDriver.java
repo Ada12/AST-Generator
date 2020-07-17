@@ -4,10 +4,10 @@ import com.elasticthree.ASTCreator.ASTCreator.Helpers.StaticVariables;
 import com.elasticthree.ASTCreator.ASTCreator.Objects.*;
 
 import org.apache.log4j.Logger;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Session;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,7 +38,8 @@ public class Neo4JDriver {
 		InputStream input = null;
 
 		try {
-			input = new FileInputStream("resources/config.properties");
+			String projectPath = System.getProperty("user.dir");
+			input = new FileInputStream(projectPath + "/src/main/resources/log4j.properties");
 			prop.load(input);
 			this.host = prop.getProperty("host");
 			this.usern = prop.getProperty("neo4j_username");
@@ -206,7 +207,7 @@ public class Neo4JDriver {
 										.getAnnotations().get(j);
 								fileNodeInsertQuery += ",(";
 								fileNodeInsertQuery += 
-										"class" 
+										"class"
 										+ classNode.getName()
 										+ String.valueOf(i)
 										+ "ann"
@@ -1030,6 +1031,7 @@ public class Neo4JDriver {
 			debugLog.debug("Driver or Session is down, check the configuration");
 		}
 	}
+
 
 	public void insertRepoNodeNeo4JDB(String repoURL, long linesOfJavaCode) {
 

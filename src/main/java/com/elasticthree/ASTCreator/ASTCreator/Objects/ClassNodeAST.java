@@ -2,6 +2,7 @@ package com.elasticthree.ASTCreator.ASTCreator.Objects;
 
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.type.Type;
+import com.github.javaparser.ast.Modifier.Keyword;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -94,7 +95,8 @@ public class ClassNodeAST {
 		for(int i=0;i<this.classChildClass.size();i++)
 		{
 
-			Type t=this.classChildClass.get(i).getType();
+//			Type t=this.classChildClass.get(i).getType();
+			Type t = this.classChildClass.get(i).getCommonType();
 			dependencyClasses.add(t.toString());
 		}
 
@@ -255,27 +257,51 @@ public class ClassNodeAST {
 		this.method = method;
 	}
 	
-	public void setAllModifiers(int mod){
-		if (Modifier.isFinal(mod)) {
-			hasFinalModifier = true;
-		}
-		if (Modifier.isAbstract(mod)){
+//	public void setAllModifiers(int mod){
+//		if (Modifier.isFinal(mod)) {
+//			hasFinalModifier = true;
+//		}
+//		if (Modifier.isAbstract(mod)){
+//			hasAbstractModifier = true;
+//		}
+//		if (Modifier.isPrivate(mod)){
+//			hasPrivateModifier = true;
+//		}
+//		if (Modifier.isPublic(mod)){
+//			hasPublicModifier = true;
+//		}
+//		if (Modifier.isProtected(mod)){
+//			hasProtectedModifier = true;
+//		}
+//		if (Modifier.isStatic(mod)){
+//			hasStaticModifier = true;
+//		}
+//		if (Modifier.isSynchronized(mod)){
+//			hasStaticModifier = true;
+//		}
+//	}
+
+	public void setAllModifiers(Keyword keyword){
+        if (keyword.equals(Keyword.FINAL)) {
+            hasFinalModifier = true;
+        }
+		if (keyword.equals(Keyword.ABSTRACT)){
 			hasAbstractModifier = true;
 		}
-		if (Modifier.isPrivate(mod)){
+        if (keyword.equals(Keyword.PRIVATE)){
 			hasPrivateModifier = true;
 		}
-		if (Modifier.isPublic(mod)){
+        if (keyword.equals(Keyword.PUBLIC)){
 			hasPublicModifier = true;
 		}
-		if (Modifier.isProtected(mod)){
+        if (keyword.equals(Keyword.PROTECTED)){
 			hasProtectedModifier = true;
 		}
-		if (Modifier.isStatic(mod)){
+        if (keyword.equals(Keyword.STATIC)){
 			hasStaticModifier = true;
 		}
-		if (Modifier.isSynchronized(mod)){
-			hasStaticModifier = true;
+        if (keyword.equals(Keyword.SYNCHRONIZED)){
+			hasSynchronizeModifier = true;
 		}
 	}
 

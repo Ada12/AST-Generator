@@ -1,5 +1,6 @@
 package com.elasticthree.ASTCreator.ASTCreator.Objects;
 
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
 
@@ -45,29 +46,53 @@ public class ClassHasMethodNodeAST {
 		setThrowsMethod(new ArrayList<ThrowMethodNodeAST>());
 	}
 
-	public void setAllModifiers(int mod){
-		if (Modifier.isFinal(mod)) {
-			hasFinalModifier = true;
-		}
-		if (Modifier.isAbstract(mod)){
-			hasAbstractModifier = true;
-		}
-		if (Modifier.isPrivate(mod)){
-			hasPrivateModifier = true;
-		}
-		if (Modifier.isPublic(mod)){
-			hasPublicModifier = true;
-		}
-		if (Modifier.isProtected(mod)){
-			hasProtectedModifier = true;
-		}
-		if (Modifier.isStatic(mod)){
-			hasStaticModifier = true;
-		}
-		if (Modifier.isSynchronized(mod)){
-			hasStaticModifier = true;
-		}
-	}
+//	public void setAllModifiers(int mod){
+//		if (Modifier.isFinal(mod)) {
+//			hasFinalModifier = true;
+//		}
+//		if (Modifier.isAbstract(mod)){
+//			hasAbstractModifier = true;
+//		}
+//		if (Modifier.isPrivate(mod)){
+//			hasPrivateModifier = true;
+//		}
+//		if (Modifier.isPublic(mod)){
+//			hasPublicModifier = true;
+//		}
+//		if (Modifier.isProtected(mod)){
+//			hasProtectedModifier = true;
+//		}
+//		if (Modifier.isStatic(mod)){
+//			hasStaticModifier = true;
+//		}
+//		if (Modifier.isSynchronized(mod)){
+//			hasStaticModifier = true;
+//		}
+//	}
+
+    public void setAllModifiers(com.github.javaparser.ast.Modifier.Keyword keyword){
+        if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.FINAL)) {
+            hasFinalModifier = true;
+        }
+        if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.ABSTRACT)){
+            hasAbstractModifier = true;
+        }
+        if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.PRIVATE)){
+            hasPrivateModifier = true;
+        }
+        if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.PUBLIC)){
+            hasPublicModifier = true;
+        }
+        if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.PROTECTED)){
+            hasProtectedModifier = true;
+        }
+        if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.STATIC)){
+            hasStaticModifier = true;
+        }
+        if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.SYNCHRONIZED)){
+            hasSynchronizeModifier = true;
+        }
+    }
 	
 	public String getName() {
 		return name;
@@ -192,6 +217,7 @@ public class ClassHasMethodNodeAST {
 	public void setMethodChildClass(List<String> methodClassNode){
 		this.childClass=methodClassNode;
 	}
+
 
 	public List<String> getMethodChildClass(){
 		return this.childClass;

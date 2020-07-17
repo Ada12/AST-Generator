@@ -143,27 +143,51 @@ public class InterfaceNodeAST {
 		this.comments = comments;
 	}
 	
-	public void setAllModifiers(int mod){
-		if (Modifier.isFinal(mod)) {
+//	public void setAllModifiers(int mod){
+//		if (Modifier.isFinal(mod)) {
+//			hasFinalModifier = true;
+//		}
+//		if (Modifier.isAbstract(mod)){
+//			hasAbstractModifier = true;
+//		}
+//		if (Modifier.isPrivate(mod)){
+//			hasPrivateModifier = true;
+//		}
+//		if (Modifier.isPublic(mod)){
+//			hasPublicModifier = true;
+//		}
+//		if (Modifier.isProtected(mod)){
+//			hasProtectedModifier = true;
+//		}
+//		if (Modifier.isStatic(mod)){
+//			hasStaticModifier = true;
+//		}
+//		if (Modifier.isSynchronized(mod)){
+//			hasStaticModifier = true;
+//		}
+//	}
+
+	public void setAllModifiers(com.github.javaparser.ast.Modifier.Keyword keyword){
+		if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.FINAL)) {
 			hasFinalModifier = true;
 		}
-		if (Modifier.isAbstract(mod)){
+		if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.ABSTRACT)){
 			hasAbstractModifier = true;
 		}
-		if (Modifier.isPrivate(mod)){
+		if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.PRIVATE)){
 			hasPrivateModifier = true;
 		}
-		if (Modifier.isPublic(mod)){
+		if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.PUBLIC)){
 			hasPublicModifier = true;
 		}
-		if (Modifier.isProtected(mod)){
+		if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.PROTECTED)){
 			hasProtectedModifier = true;
 		}
-		if (Modifier.isStatic(mod)){
+		if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.STATIC)){
 			hasStaticModifier = true;
 		}
-		if (Modifier.isSynchronized(mod)){
-			hasStaticModifier = true;
+		if (keyword.equals(com.github.javaparser.ast.Modifier.Keyword.SYNCHRONIZED)){
+			hasSynchronizeModifier = true;
 		}
 	}
 

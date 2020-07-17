@@ -2,6 +2,7 @@ package com.elasticthree.ASTCreator.ASTCreator;
 
 import org.apache.log4j.Logger; 
 import com.github.javaparser.ast.CompilationUnit;
+import org.apache.log4j.net.SyslogAppender;
 
 public class ClassMethodDeclarationAST {
 	
@@ -15,9 +16,10 @@ public class ClassMethodDeclarationAST {
 		setCu(cu);
 		String packageName = "";
 		try{
-			packageName = cu.getPackage().getName().toString();
+			packageName = cu.getPackageDeclaration().get().toString().split(" |;")[1];
+			System.out.println(packageName);
 		}
-		catch(NullPointerException n_e){
+		catch(Exception n_e){
 			packageName = "No_package";
 		}
 		finally{

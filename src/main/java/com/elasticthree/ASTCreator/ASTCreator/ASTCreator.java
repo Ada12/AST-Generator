@@ -56,7 +56,9 @@ public class ASTCreator {
 			return cu;
 		}
 		try {
-			cu = JavaParser.parse(in);
+            JavaParser javaParser = new JavaParser();
+            cu = javaParser.parse(in).getResult().get();
+//			cu = JavaParser.parse(in);
 		} catch (Exception e1) {
 			debugLog.debug("Parsing Error skip project " + path_to_class
 					+ " from AST - Graph procedure");
@@ -87,8 +89,8 @@ public class ASTCreator {
 			ast.getTypeDeclarationFile();
 			String packageName = "";
 			try {
-				packageName = cu.getPackage().getName().toString();
-			} catch (NullPointerException n_e) {
+                packageName = cu.getPackageDeclaration().get().toString().split(" |;")[1];
+			} catch (Exception n_e) {
 				packageName = "No_package";
 			}
 			fileObject = new FileNodeAST(getRepoURL(), path_to_class,
@@ -155,7 +157,8 @@ public class ASTCreator {
 	}
 
 	public static void main(String[] args) {
-		PropertyConfigurator.configure("resources/log4j.properties");
+		String projectPath = System.getProperty("user.dir");
+		PropertyConfigurator.configure(projectPath + "/src/main/resources/log4j.properties");
 		// args[0] -> Path to Java Project
 		List<String> classes = RecursivelyProjectJavaFiles
 				.getProjectJavaFiles(args[0]);

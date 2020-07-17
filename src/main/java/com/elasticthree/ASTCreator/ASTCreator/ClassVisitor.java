@@ -3,9 +3,13 @@ package com.elasticthree.ASTCreator.ASTCreator;
 import java.util.*;
 
 
+import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.*;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MemberValuePair;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
@@ -88,8 +92,8 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 			res.addAll(parsingMethodPartParameter((TryStmt)ex));
 		}else if(ex.getClass().getTypeName().endsWith("IfStmt")){
 			res.addAll(parsingMethodPartParameter((IfStmt)ex));
-		}else if(ex.getClass().getTypeName().endsWith("ForeachStmt")){
-			res.addAll(parsingMethodPartParameter((ForeachStmt)ex));
+		}else if(ex.getClass().getTypeName().endsWith("ForEachStmt")){
+			res.addAll(parsingMethodPartParameter((ForEachStmt)ex));
 		}else{
 			try {
 //				throw new Exception("There's still other type of stmt - "+ex.getClass().getTypeName());
@@ -107,15 +111,15 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 		List<String> res=new ArrayList<String>();
 
 		Queue<Node> searchQueue = new LinkedList<Node>();
-		searchQueue.addAll(ex.getChildrenNodes());
+		searchQueue.addAll(ex.getChildNodes());
 
 		while(!searchQueue.isEmpty()){
 			Node node = searchQueue.poll();
 
-			searchQueue.addAll(node.getChildrenNodes());
+			searchQueue.addAll(node.getChildNodes());
 
 			if(node instanceof ClassOrInterfaceType){
-				res.add(((ClassOrInterfaceType)node).getName());
+				res.add(((ClassOrInterfaceType)node).getName().toString());
 			}
 		}
 
@@ -126,20 +130,27 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 	private List<String> parsingMethodPartParameter(TryStmt trys){
 
 		List<String> res=new ArrayList<String>();
-		List<String> resad=new ArrayList<String>();
+//		List<String> resad=new ArrayList<String>();
 		if(trys.getResources().size()!=0)
 		{
-			res.add(trys.getResources().get(0).getType().toString());
+			for (Expression expression: trys.getResources()){
+				if (expression.isVariableDeclarationExpr()) {
+					NodeList<VariableDeclarator> nodeList = ((VariableDeclarationExpr)expression).getVariables();
+					for (VariableDeclarator variableDeclarator: nodeList) {
+						res.add((variableDeclarator.getType().toString()));
+					}
+				}
+			}
 		}
 
 
-		for(int i=0;i<trys.getTryBlock().getStmts().size();i++)
-		{
-			resad.clear();
-			for (String n:parsingMethodPartParameter(trys.getTryBlock().getStmts().get(i))) {
-				resad.add(n);
-			};
-		}
+//		for(int i=0;i<trys.getTryBlock().getStmts().size();i++)
+//		{
+//			resad.clear();
+//			for (String n:parsingMethodPartParameter(trys.getTryBlock().getStmts().get(i))) {
+//				resad.add(n);
+//			};
+//		}
 
 		return res;
 	}
@@ -160,21 +171,23 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 //			for (Statement stmt : ((BlockStmt) (ifs.getElseStmt())).getStmts()) {
 //				res.addAll(parsingMethodPartParameter(stmt));
 //			}
-
-			res.addAll(parsingMethodPartParameter(ifs.getElseStmt()));
+			res.addAll(parsingMethodPartParameter(ifs.getElseStmt().orElse(null)));
 		}
 
 		return res;
 	}
 
 	// foreachStmt 入口
-	private List<String> parsingMethodPartParameter(ForeachStmt fors){
+	private List<String> parsingMethodPartParameter(ForEachStmt fors){
 		List<String> res = new ArrayList<String>();
 
 		//Variable 加入
 		if(fors.getVariable()!=null)
 		{
-			res.add(fors.getVariable().getType().toString());
+			NodeList<VariableDeclarator> nodeList = (fors.getVariable().getVariables());
+			for (VariableDeclarator variableDeclarator: nodeList) {
+				res.add((variableDeclarator.getType().toString()));
+			}
 		}
 
 
@@ -185,19 +198,30 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 	private void parsingClass(ClassOrInterfaceDeclaration n) {
 		numberOfClasses++;
 
-		ClassNodeAST classNode = new ClassNodeAST(getRepoURL(), n.getName(),
+		Optional<String> name = n.getFullyQualifiedName();
+		ClassNodeAST classNode = new ClassNodeAST(getRepoURL(), name.get(),
 				getPackageFile());
-		classNode.setAllModifiers(n.getModifiers());
-		if (n.getExtends() != null) {
-			List<ClassOrInterfaceType> ext = n.getExtends();
-			if (ext.size() > 0)
-				classNode.setExtendsClass(ext.get(0).getName());
+		NodeList<Modifier> classModifiers = n.getModifiers();
+		for(Modifier modifier: classModifiers) {
+			Modifier.Keyword keyword = modifier.getKeyword();
+			classNode.setAllModifiers(keyword);
 		}
 
-		if (n.getImplements().size() != 0) {
+		if (n.getExtendedTypes() != null) {
+			NodeList<ClassOrInterfaceType> ext = n.getExtendedTypes();
+			if (ext.size() > 0) {
+				for (ClassOrInterfaceType type: ext) {
+					// simple name, extends list, setExtendsClass change to list?
+					classNode.setExtendsClass(type.getName().getIdentifier());
+				}
+
+			}
+		}
+
+		if (n.getImplementedTypes().size() != 0) {
 			List<ClassImplementsNodeAST> classImpl = new ArrayList<ClassImplementsNodeAST>();
-			for (ClassOrInterfaceType impl : n.getImplements()) {
-				classImpl.add(new ClassImplementsNodeAST(impl.getName()));
+			for (ClassOrInterfaceType impl : n.getImplementedTypes()) {
+				classImpl.add(new ClassImplementsNodeAST(impl.getName().getIdentifier()));
 				// logger.info("Implements interfaces: " + impl.getName());
 			}
 			classNode.setImpl(classImpl);
@@ -208,13 +232,13 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 
 			for (AnnotationExpr ann : n.getAnnotations()) {
 				List<MemberValuePair> parameter = new ArrayList<MemberValuePair>();
-				if(ann.getChildrenNodes().size()>1)
+				if(ann.getChildNodes().size()>1)
 				{
-					for(int i=1;i<ann.getChildrenNodes().size();i++)
+					for(int i=1;i<ann.getChildNodes().size();i++)
 					{
 
-						if(ann.getChildrenNodes().get(i) instanceof MemberValuePair) {
-							parameter.add((MemberValuePair) ann.getChildrenNodes().get(i));
+						if(ann.getChildNodes().get(i) instanceof MemberValuePair) {
+							parameter.add((MemberValuePair) ann.getChildNodes().get(i));
 						}
 					}
 
@@ -243,7 +267,11 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 				{
 					childClassNodes.add((FieldDeclaration)childNode);
 					FieldDeclaration c=(FieldDeclaration)childNode;
-					methodPartParameters.add(c.getType().toString());
+					NodeList<VariableDeclarator> variableDeclarators = c.getVariables();
+					for (VariableDeclarator variableDeclarator: variableDeclarators) {
+						// type can be explored
+						methodPartParameters.add(variableDeclarator.getType().toString());
+					}
 					classNode.setMethodPartParameters(methodPartParameters);
 				}
 //
@@ -265,7 +293,7 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 					numberOfMethodsPerClass++;
 					MethodDeclaration method = (MethodDeclaration) member;
 					ClassHasMethodNodeAST methodClass = new ClassHasMethodNodeAST(
-							method.getName(), getPackageFile());
+							method.getNameAsString(), getPackageFile());
 					methodClass.setReturningType(method.getType().toString());
 
 					if (method.getAllContainedComments().size() != 0) {
@@ -283,13 +311,13 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 
 						for (AnnotationExpr ann : method.getAnnotations()) {
 							List<MemberValuePair> parameter = new ArrayList<MemberValuePair>();
-							if(ann.getChildrenNodes().size()>1)
+							if(ann.getChildNodes().size()>1)
 							{
-								for(int i=1;i<ann.getChildrenNodes().size();i++)
+								for(int i=1;i<ann.getChildNodes().size();i++)
 								{
 
-									if(ann.getChildrenNodes().get(i) instanceof MemberValuePair) {
-										parameter.add((MemberValuePair) ann.getChildrenNodes().get(i));
+									if(ann.getChildNodes().get(i) instanceof MemberValuePair) {
+										parameter.add((MemberValuePair) ann.getChildNodes().get(i));
 									}
 								}
 							}
@@ -313,32 +341,35 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 
 					}
 
-					if (method.getThrows().size() != 0) {
+					if (method.getThrownExceptions().size() != 0) {
 						List<ThrowMethodNodeAST> throwsMethod = new ArrayList<ThrowMethodNodeAST>();
-						for (ReferenceType reftype : method.getThrows()) {
+						for (ReferenceType reftype : method.getThrownExceptions()) {
 							throwsMethod.add(new ThrowMethodNodeAST(reftype
 									.toString()));
 						}
 						methodClass.setThrowsMethod(throwsMethod);
 					}
-					if (method.getBody()!=null && method.getBody().getStmts().size()!=0)
+					Optional<BlockStmt> methodStmt = method.getBody();
+					if (methodStmt.isPresent() && methodStmt.get().getStatements().size()!=0)
 					{
 						List<String> methodNodes = new ArrayList<String>();
-						for(int i=0;i<method.getBody().getStmts().size();i++)
+						for(int i=0;i<methodStmt.get().getStatements().size();i++)
 						{
 //						Statement exp=new ExpressionStmt();
 //						exp(method.getBody().getStmts().get(i));
 //						String type=method.getBody().getStmts().get(i).getClass().getTypeName();
 
 // 						这里作为解析函数内成员变量的递归入口
-							methodNodes.addAll(parsingMethodPartParameter(method.getBody().getStmts().get(i)));
+							methodNodes.addAll(parsingMethodPartParameter(method.getBody().get().getStatements().get(i)));
 						}
 						methodClass.setMethodChildClass(methodNodes);
 					}
 
-
-
-					methodClass.setAllModifiers(method.getModifiers());
+					NodeList<Modifier> methodModifiers = method.getModifiers();
+					for(Modifier modifier: methodModifiers) {
+						Modifier.Keyword keyword = modifier.getKeyword();
+						methodClass.setAllModifiers(keyword);
+					}
 					classMethodNode.add(methodClass);
 					classNode.setMethod(classMethodNode);
 				}
@@ -351,20 +382,24 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 	private void parsingInterface(ClassOrInterfaceDeclaration n) {
 		numberOfInterfaces++;
 		InterfaceNodeAST interfaceNode = new InterfaceNodeAST(getRepoURL(),
-				n.getName(), getPackageFile());
-		interfaceNode.setAllModifiers(n.getModifiers());
+				n.getNameAsString(), getPackageFile());
+		NodeList<Modifier> interfaceModifiers = n.getModifiers();
+		for(Modifier modifier: interfaceModifiers) {
+			Modifier.Keyword keyword = modifier.getKeyword();
+			interfaceNode.setAllModifiers(keyword);
+		}
 
 		if (n.getAnnotations().size() != 0) {
 			List<AnnotationNodeAST> interfAnn = new ArrayList<AnnotationNodeAST>();
 
 			for (AnnotationExpr ann : n.getAnnotations()) {
 				List<MemberValuePair> parameter = new ArrayList<MemberValuePair>();
-				if(ann.getChildrenNodes().size()>1)
+				if(ann.getChildNodes().size()>1)
 				{
-					for(int i=1;i<ann.getChildrenNodes().size();i++)
+					for(int i=1;i<ann.getChildNodes().size();i++)
 					{
-						if(ann.getChildrenNodes().get(i) instanceof MemberValuePair) {
-							parameter.add((MemberValuePair) ann.getChildrenNodes().get(i));
+						if(ann.getChildNodes().get(i) instanceof MemberValuePair) {
+							parameter.add((MemberValuePair) ann.getChildNodes().get(i));
 						}
 					}
 
@@ -393,7 +428,7 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 					numberOfMethodsPerInterface++;
 					MethodDeclaration method = (MethodDeclaration) member;
 					InterfaceHasMethodNodeAST methodInterface = new InterfaceHasMethodNodeAST(
-							method.getName(), getPackageFile());
+							method.getNameAsString(), getPackageFile());
 					methodInterface.setReturningType(method.getType()
 							.toString());
 
@@ -412,12 +447,12 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 
 						for (AnnotationExpr ann : method.getAnnotations()) {
 							List<MemberValuePair> parameter = new ArrayList<MemberValuePair>();
-							if(ann.getChildrenNodes().size()>1)
+							if(ann.getChildNodes().size()>1)
 							{
-								for(int i=1;i<ann.getChildrenNodes().size();i++)
+								for(int i=1;i<ann.getChildNodes().size();i++)
 								{
-									if(ann.getChildrenNodes().get(i) instanceof MemberValuePair) {
-										parameter.add((MemberValuePair) ann.getChildrenNodes().get(i));
+									if(ann.getChildNodes().get(i) instanceof MemberValuePair) {
+										parameter.add((MemberValuePair) ann.getChildNodes().get(i));
 									}
 								}
 
@@ -440,16 +475,19 @@ public class ClassVisitor extends VoidVisitorAdapter<Object> {
 						methodInterface.setParameters(parametersMethod);
 					}
 
-					if (method.getThrows().size() != 0) {
+					if (method.getThrownExceptions().size() != 0) {
 						List<ThrowMethodNodeAST> throwsMethod = new ArrayList<ThrowMethodNodeAST>();
-						for (ReferenceType reftype : method.getThrows()) {
+						for (ReferenceType reftype : method.getThrownExceptions()) {
 							throwsMethod.add(new ThrowMethodNodeAST(reftype
 									.toString()));
 						}
 						methodInterface.setThrowsMethod(throwsMethod);
 					}
-
-					methodInterface.setAllModifiers(method.getModifiers());
+					NodeList<Modifier> methodModifiers = method.getModifiers();
+					for(Modifier modifier: methodModifiers) {
+						Modifier.Keyword keyword = modifier.getKeyword();
+						interfaceNode.setAllModifiers(keyword);
+					}
 					interfMethodNode.add(methodInterface);
 					interfaceNode.setMethod(interfMethodNode);
 				}

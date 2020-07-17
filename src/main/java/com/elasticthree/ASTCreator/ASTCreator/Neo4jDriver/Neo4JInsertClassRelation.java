@@ -4,7 +4,7 @@ import com.elasticthree.ASTCreator.ASTCreator.Helpers.StaticVariables;
 import com.elasticthree.ASTCreator.ASTCreator.Objects.*;
 
 import org.apache.log4j.Logger;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.*;
 
 import java.io.Console;
 import java.io.FileInputStream;
@@ -35,7 +35,8 @@ public class Neo4JInsertClassRelation {
         InputStream input = null;
 
         try {
-            input = new FileInputStream("resources/config.properties");
+            String projectPath = System.getProperty("user.dir");
+            input = new FileInputStream(projectPath + "/src/main/resources/log4j.properties");
             prop.load(input);
             this.host = prop.getProperty("host");
             this.usern = prop.getProperty("neo4j_username");
